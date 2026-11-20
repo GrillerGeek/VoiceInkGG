@@ -1,0 +1,162 @@
+[
+  {
+    "identity": "fluidaudio",
+    "source": "https://github.com/FluidInference/FluidAudio",
+    "revision": "ee78635d23d52379117554ba72358b65a0612447",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/fluidaudio/LICENSE",
+        "source_path": "LICENSE",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      },
+      {
+        "path": "Dependencies/fluidaudio/Tests/FluidAudioTests/ASR/Parakeet/SlidingWindow/Fixtures/Vocabulary/LICENSE_CC_BY_4_0.txt",
+        "source_path": "Tests/FluidAudioTests/ASR/Parakeet/SlidingWindow/Fixtures/Vocabulary/LICENSE_CC_BY_4_0.txt",
+        "sha256": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94"
+      },
+      {
+        "path": "Dependencies/fluidaudio/ThirdPartyLicenses/KokoroANE-v3/NOTICE",
+        "source_path": "ThirdPartyLicenses/KokoroANE-v3/NOTICE",
+        "sha256": "bd1d8a43ff19e060124063c53f9dcd315e4766a745157d87a51e67d9a0efd8e4"
+      }
+    ]
+  },
+  {
+    "identity": "llmkit",
+    "source": "https://github.com/Beingpax/LLMkit.git",
+    "revision": "ff32e368eeaffd2f6c1ef0d3614a0bddea4c3fd5",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/llmkit/LICENSE",
+        "source_path": "LICENSE",
+        "sha256": "b60d52cf7ef023b38b4987eddd3af210b79e6a733e3678c7f8f59e38d9a3f0cb"
+      }
+    ]
+  },
+  {
+    "identity": "mediaremote-adapter",
+    "source": "https://github.com/Beingpax/mediaremote-adapter",
+    "revision": "7d5b6cc99b933ae2a2378d11ee9798acf6b69009",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/mediaremote-adapter/LICENSE",
+        "source_path": "LICENSE",
+        "sha256": "066b4c697a3cac853eb847289c7794791e1c5c8abb41dbd1521c585c6e983da7"
+      }
+    ]
+  },
+  {
+    "identity": "networkimage",
+    "source": "https://github.com/gonzalezreal/NetworkImage",
+    "revision": "2849f5323265386e200484b0d0f896e73c3411b9",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/networkimage/LICENSE",
+        "source_path": "LICENSE",
+        "sha256": "4438d8a78e985d37ba3c4db356557423b3739b2b2a0abb2ecefcafda4009c16b"
+      }
+    ]
+  },
+  {
+    "identity": "swift-atomics",
+    "source": "https://github.com/apple/swift-atomics.git",
+    "revision": "0442cb5a3f98ab802acb777929fdb446bda11a34",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/swift-atomics/LICENSE.txt",
+        "source_path": "LICENSE.txt",
+        "sha256": "770af8291f708538d8ff885a0bbc4e045cd700531741c4f99528d435c14d7f55"
+      }
+    ]
+  },
+  {
+    "identity": "swift-cmark",
+    "source": "https://github.com/swiftlang/swift-cmark",
+    "revision": "08ddb528923cc1a6527e02b7a1aee9e516ca749a",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/swift-cmark/COPYING",
+        "source_path": "COPYING",
+        "sha256": "c22e885f33b821bddb24cf007145e5540655b6c0f403e49e6c76a93c28e6d9a9"
+      }
+    ]
+  },
+  {
+    "identity": "swift-markdown-ui",
+    "source": "https://github.com/gonzalezreal/swift-markdown-ui",
+    "revision": "5f613358148239d0292c0cef674a3c2314737f9e",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/swift-markdown-ui/LICENSE",
+        "source_path": "LICENSE",
+        "sha256": "183def18953a1c14583f31c21d07954bc528147750bdd234d452fe4cf7478411"
+      }
+    ]
+  },
+  {
+    "identity": "transcribe-cpp-swift",
+    "source": "https://github.com/Beingpax/Transcribe-cpp-swift.git",
+    "revision": "fb1c1ad99e8939a69fcfb613417d9635fb77ef42",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/transcribe-cpp-swift/LICENSE",
+        "source_path": "LICENSE",
+        "sha256": "86a53633b56f6b029d3cb42158bcc7aac0cdff898aceb13e83b93e368bbc4ac6"
+      }
+    ]
+  },
+  {
+    "identity": "zipfoundation",
+    "source": "https://github.com/weichsel/ZIPFoundation.git",
+    "revision": "22787ffb59de99e5dc1fbfe80b19c97a904ad48d",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/zipfoundation/LICENSE",
+        "source_path": "LICENSE",
+        "sha256": "93a5b6f4c4fcfbca71aaf17f5758d249cf205d5d1c237becc37f14e43af09f6b"
+      }
+    ]
+  },
+  {
+    "identity": "whisper.cpp",
+    "source": "https://github.com/ggml-org/whisper.cpp",
+    "revision": "2eeeba56e9edd762b4b38467bab96c2517163158",
+    "status": "Verified exact checkout; retained license/notice files",
+    "files": [
+      {
+        "path": "Dependencies/whisper.cpp/LICENSE",
+        "source_path": "LICENSE",
+        "sha256": "e562a2ddfaf8280537795ac5ecd34e3012b6582a147ef69ba6a6a5c08c84757d"
+      },
+      {
+        "path": "Dependencies/whisper.cpp/bindings/go/LICENSE",
+        "source_path": "bindings/go/LICENSE",
+        "sha256": "3fa8d70be1f0deb5fb971a9c36cfbdcdc904fa46646560f9ac859494b40248b6"
+      },
+      {
+        "path": "Dependencies/whisper.cpp/examples/wchess/wchess.wasm/chessboardjs-1.0.0/js/chessboard-1.0.0/LICENSE.md",
+        "source_path": "examples/wchess/wchess.wasm/chessboardjs-1.0.0/js/chessboard-1.0.0/LICENSE.md",
+        "sha256": "d33e835c372360941e425214c06c2063f7058d850b9a0153d5a624c1cab9bf31"
+      },
+      {
+        "path": "Dependencies/whisper.cpp/tests/earnings21/normalizers/LICENSE",
+        "source_path": "tests/earnings21/normalizers/LICENSE",
+        "sha256": "fff3c2ad5a861a1dedc227f08afca28a12bd6fd80a11e0095901262c4fe61d16"
+      },
+      {
+        "path": "Dependencies/whisper.cpp/tests/librispeech/normalizers/LICENSE",
+        "source_path": "tests/librispeech/normalizers/LICENSE",
+        "sha256": "fff3c2ad5a861a1dedc227f08afca28a12bd6fd80a11e0095901262c4fe61d16"
+      }
+    ]
+  }
+]

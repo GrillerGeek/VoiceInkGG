@@ -20,7 +20,7 @@ class FluidAudioTranscriptionService: TranscriptionService {
     private var cachedModels: AsrModels?
     private var loadingTask: (version: AsrModelVersion, task: Task<AsrModels, Error>)?
     private let audioConverter = AudioConverter()
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "FluidAudioTranscriptionService")
+    private let logger = Logger(subsystem: AppIdentity.logSubsystem, category: "FluidAudioTranscriptionService")
 
     @MainActor
     func prewarmUnifiedModel(isRealtime: Bool) async throws {
@@ -95,7 +95,7 @@ class FluidAudioTranscriptionService: TranscriptionService {
         }
 
         let task = Task {
-            let cacheDirectory = AsrModels.defaultCacheDirectory(for: version)
+            let cacheDirectory = FluidAudioModelManager.parakeetCacheDirectory(for: version)
             guard AsrModels.modelsExist(at: cacheDirectory, version: version) else {
                 throw AsrModelsError.loadingFailed(
                     "Parakeet model files are incomplete. Download the model from AI Models."
@@ -256,7 +256,10 @@ class FluidAudioTranscriptionService: TranscriptionService {
 
     private func getOrLoadVadManager() async throws -> VadManager {
         if let vadManager { return vadManager }
-        let manager = try await VadManager(config: VadConfig(defaultThreshold: 0.7))
+        let manager = try await VadManager(
+            config: VadConfig(defaultThreshold: 0.7),
+            modelDirectory: FluidAudioModelManager.fluidAudioModelsRootDirectory().deletingLastPathComponent()
+        )
         vadManager = manager
         return manager
     }

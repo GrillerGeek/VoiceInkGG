@@ -19,6 +19,7 @@ struct FluidAudioDownloadStatus: Equatable {
 class FluidAudioModelManager: ObservableObject {
     @Published private var downloadStatuses: [String: FluidAudioDownloadStatus] = [:]
     @Published private var modelStateRevision = 0
+    private let setupReadiness: ModelSetupReadinessStore
     private var activeDownloadIDs: [String: UUID] = [:]
     private var activeNetworkProgressIDs: [String: UUID] = [:]
     private var activeDownloadTasks: [String: Task<Void, Never>] = [:]
@@ -26,7 +27,7 @@ class FluidAudioModelManager: ObservableObject {
     var onModelDeleted: ((String) -> Void)?
     var onModelsChanged: (() -> Void)?
 
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "FluidAudioModelManager")
+    private let logger = Logger(subsystem: AppIdentity.logSubsystem, category: "FluidAudioModelManager")
 
     // Add new Fluid Audio models here when support is added.
     nonisolated private static let modelVersionMap: [String: AsrModelVersion] = [
@@ -148,11 +149,15 @@ class FluidAudioModelManager: ObservableObject {
         return Language(rawValue: languageCode)
     }
 
-    init() {}
+    init(defaults: UserDefaults = .standard) {
+        setupReadiness = ModelSetupReadinessStore(
+            defaults: defaults, key: "FluidAudioIncompleteModelSetups")
+    }
 
     // MARK: - Query helpers
 
     func isFluidAudioModelDownloaded(named modelName: String) -> Bool {
+        guard !requiresSetupRetry(for: modelName) else { return false }
         switch Self.modelKind(for: modelName) {
         case .nemotron(let variant):
             return Self.nemotronRequiredFilesExist(in: Self.nemotronCacheDirectory(for: variant))
@@ -172,11 +177,20 @@ class FluidAudioModelManager: ObservableObject {
     }
 
     func isFluidAudioModelDownloading(_ model: FluidAudioModel) -> Bool {
-        downloadStatuses[model.name] != nil
+        activeDownloadIDs[model.name] != nil
     }
 
     func downloadStatus(for model: FluidAudioModel) -> FluidAudioDownloadStatus? {
-        downloadStatuses[model.name]
+        if let status = downloadStatuses[model.name] { return status }
+        guard requiresSetupRetry(for: model.name) else { return nil }
+        return FluidAudioDownloadStatus(
+            fractionCompleted: 0,
+            message: "Model setup is incomplete. Choose Resume Download to retry."
+        )
+    }
+
+    func requiresSetupRetry(for modelName: String) -> Bool {
+        setupReadiness.requiresRetry(for: modelName)
     }
 
     // MARK: - Download
@@ -200,6 +214,8 @@ class FluidAudioModelManager: ObservableObject {
         }
 
         let modelName = model.name
+        setupReadiness.beginSetup(for: modelName)
+        modelStateRevision += 1
         let downloadID = UUID()
         activeDownloadIDs[modelName] = downloadID
         activeNetworkProgressIDs[modelName] = downloadID
@@ -207,8 +223,14 @@ class FluidAudioModelManager: ObservableObject {
             fractionCompleted: 0.0,
             message: "Preparing FluidAudio download..."
         )
+        var recoveryMessage: String?
         defer {
             clearDownloadStatus(for: modelName, downloadID: downloadID)
+            if let recoveryMessage {
+                downloadStatuses[modelName] = FluidAudioDownloadStatus(
+                    fractionCompleted: 0, message: recoveryMessage
+                )
+            }
             onModelsChanged?()
         }
 
@@ -250,6 +272,7 @@ class FluidAudioModelManager: ObservableObject {
                 let modelDirectory = try await StreamingNemotronMultilingualAsrManager.downloadVariant(
                     languageCode: variant.downloadLanguageCode,
                     chunkMs: Self.nemotronChunkMs,
+                    to: Self.fluidAudioModelsRootDirectory(),
                     progressHandler: progressHandler
                 )
                 try Task.checkCancellation()
@@ -267,7 +290,7 @@ class FluidAudioModelManager: ObservableObject {
                 guard let repo = Self.parakeetRepo(for: version) else {
                     throw AsrModelsError.loadingFailed("Unsupported Parakeet model version.")
                 }
-                let cacheDirectory = AsrModels.defaultCacheDirectory(for: version)
+                let cacheDirectory = Self.parakeetCacheDirectory(for: version)
                 try await ModelHub.download(
                     repo,
                     to: cacheDirectory.deletingLastPathComponent(),
@@ -288,16 +311,21 @@ class FluidAudioModelManager: ObservableObject {
                     encoderPrecision: .int8
                 )
                 try Task.checkCancellation()
-                _ = try await VadManager()
+                _ = try await VadManager(modelDirectory: Self.fluidAudioModelsRootDirectory().deletingLastPathComponent())
                 try Task.checkCancellation()
             }
             try Task.checkCancellation()
+            setupReadiness.completeSetup(for: modelName)
             modelStateRevision += 1
         } catch {
+            // The persisted begin marker deliberately survives failure, cancellation
+            // and app termination. Presence alone must not make this cache ready.
+            modelStateRevision += 1
             if error is CancellationError || Task.isCancelled {
                 // FluidAudio validates and resumes partial downloads on the next attempt.
-                modelStateRevision += 1
+                recoveryMessage = "Download interrupted. Choose Resume Download to retry."
             } else {
+                recoveryMessage = "Model setup failed: \(error.localizedDescription) Choose Resume Download to retry."
                 logger.error("❌ FluidAudio download failed for \(modelName, privacy: .public): \(error, privacy: .public)")
             }
         }
@@ -387,7 +415,7 @@ class FluidAudioModelManager: ObservableObject {
     }
 
     private func cacheDirectory(for version: AsrModelVersion) -> URL {
-        AsrModels.defaultCacheDirectory(for: version)
+        Self.parakeetCacheDirectory(for: version)
     }
 
     nonisolated private static var parakeetUnifiedRequiredFiles: Set<String> {
@@ -454,17 +482,18 @@ class FluidAudioModelManager: ObservableObject {
             .appendingPathComponent(Repo.parakeetUnified.folderName, isDirectory: true)
     }
 
-    // Matches the cache root used by FluidAudio's Unified managers.
-    nonisolated private static func fluidAudioModelsRootDirectory() -> URL {
-        let fileManager = FileManager.default
-        if let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
-            return
-                appSupport
-                .appendingPathComponent("FluidAudio", isDirectory: true)
-                .appendingPathComponent("Models", isDirectory: true)
-        }
+    nonisolated static func parakeetCacheDirectory(for version: AsrModelVersion) -> URL {
+        fluidAudioModelsRootDirectory()
+            .appendingPathComponent((parakeetRepo(for: version) ?? .parakeetV3).folderName, isDirectory: true)
+    }
 
-        return fileManager.temporaryDirectory
+    // Explicit paths isolate model reads, repairs and deletions from other applications.
+    nonisolated static func fluidAudioModelsRootDirectory() -> URL {
+        let fileManager = FileManager.default
+        let support = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support", isDirectory: true)
+        return support
+            .appendingPathComponent(AppIdentity.applicationSupportDirectoryName, isDirectory: true)
             .appendingPathComponent("FluidAudio", isDirectory: true)
             .appendingPathComponent("Models", isDirectory: true)
     }

@@ -5,15 +5,15 @@ import os
 final class APIKeyManager {
     static let shared = APIKeyManager()
 
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "APIKeyManager")
+    private let logger = Logger(subsystem: AppIdentity.logSubsystem, category: "APIKeyManager")
     private let keychain = KeychainService.shared
     /// `hasAPIKey` runs once per cloud model inside SwiftUI bodies and on every recording start;
     /// each Keychain lookup is a synchronous securityd round trip on the main thread.
     /// All provider key writes go through this class, so save/delete keep the cache exact.
-    /// Keys added on another Mac via iCloud Keychain appear after relaunch.
+    /// Credentials remain in this build identity's device-local login Keychain.
     private let keyPresence = OSAllocatedUnfairLock<[String: Bool]>(initialState: [:])
 
-    /// Provider to Keychain identifier mapping (iOS compatible for iCloud sync).
+    /// Stable provider account names inside the isolated fork Keychain service.
     private static let providerToKeychainKey: [String: String] = [
         "groq": "groqAPIKey",
         "deepgram": "deepgramAPIKey",

@@ -1,5 +1,7 @@
 # Contributing to VoiceInk
 
+This document preserves the upstream VoiceInk contribution policy. This checkout is the personal Robey Voice fork; it does not change upstream's pull-request policy or offer upstream support for fork-specific behavior. Use the fork's [build guide](BUILDING.md) and [validation record](docs/robey-voice-validation.md) when reviewing its changes. Do not send fork-specific changes or private diagnostics to upstream without a separate decision.
+
 First off, thank you for considering contributing to VoiceInk! It's people like you that make VoiceInk such a great tool.
 
 ## ⚠️ Pull Requests Not Accepted

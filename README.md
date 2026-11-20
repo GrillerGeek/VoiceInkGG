@@ -1,108 +1,49 @@
 <div align="center">
-  <img src="VoiceInk/Assets.xcassets/AppIcon.appiconset/256-mac.png" width="180" height="180" />
-  <h1>VoiceInk</h1>
-  <p>Voice to text app for macOS to transcribe what you say to text almost instantly</p>
-
-  [![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-  ![Platform](https://img.shields.io/badge/platform-macOS%2015.0%2B-brightgreen)
-  [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Beingpax/VoiceInk)](https://github.com/Beingpax/VoiceInk/releases)
-  ![GitHub all releases](https://img.shields.io/github/downloads/Beingpax/VoiceInk/total)
-  ![GitHub stars](https://img.shields.io/github/stars/Beingpax/VoiceInk?style=social)
-  <p>
-    <a href="https://tryvoiceink.com">Website</a> •
-    <a href="https://www.youtube.com/@tryvoiceink">YouTube</a>
-  </p>
-
-  <a href="https://tryvoiceink.com">
-    <img src="https://img.shields.io/badge/Download%20Now-Latest%20Version-blue?style=for-the-badge&logo=apple" alt="Download VoiceInk" width="250"/>
-  </a>
+  <img src="VoiceInk/Assets.xcassets/AppIcon.appiconset/256-mac.png" width="180" height="180" alt="Robey Voice waveform icon" />
+  <h1>Robey Voice</h1>
+  <p>A personal macOS dictation fork of VoiceInk</p>
 </div>
 
----
+Robey Voice is Jason Robey's GPLv3 fork of [VoiceInk](https://github.com/Beingpax/VoiceInk), by Prakash Joshi (Beingpax) and contributors. The first fork version is **0.1.0**. It removes the application's trial, license activation, purchase prompts, and commercial device limits in every build configuration.
 
-VoiceInk is a native macOS application that transcribes what you say to text almost instantly. You can find all the information and download the app from [here](https://tryvoiceink.com). 
-
-![VoiceInk Mac App](https://github.com/user-attachments/assets/12367379-83e7-48a6-b52c-4488a6a04bba)
-
-After dedicating the past 5 months to developing this app, I've decided to open source it for the greater good. 
-
-My goal is to make it **the most efficient and privacy-focused voice-to-text solution for macOS** that is a joy to use. While the source code is now open for experienced developers to build and contribute, purchasing a license helps support continued development and gives you access to automatic updates, priority support, and upcoming features.
+Local dictation requires no app account, license key, subscription, or cloud API credentials. Install a local speech model before using it offline. Cloud transcription, AI enhancement, Ollama, Local CLI, and custom commands remain optional; deliberately configured external services can have their own costs and data handling.
 
 ## Features
 
-- 🎙️ **Accurate Transcription**: Local AI models that transcribe your voice to text with 99% accuracy, almost instantly
-- 🔒 **Privacy First**: 100% offline processing ensures your data never leaves your device
-- ⚡ **Modes**: Intelligent app detection automatically applies your perfect pre-configured settings based on the app/ URL you're on
-- 🧠 **Context Aware**: Smart AI that understands your screen content and adapts to the context
-- 🎯 **Global Shortcuts**: Configurable keyboard or mouse shortcuts for quick recording and push-to-talk functionality
-- 📝 **Personal Dictionary**: Train the AI to understand your unique terminology with custom words, industry terms, and smart text replacements
-- 🔄 **Smart Modes**: Instantly switch between AI-powered modes optimized for different writing styles and contexts
-- 🤖 **AI Assistant**: Built-in voice assistant mode for a quick chatGPT like conversational assistant
+- Local speech transcription and audio-file transcription using the existing recording and delivery pipeline.
+- Configurable recording shortcuts, modes, personal dictionary, and text replacements.
+- Separate Robey Voice storage and device-local Keychain credentials; development builds have their own identity too.
+- Enhancement, clipboard/selected-text/screen context, and automatic correction observation off in fresh defaults.
+- Manual app replacement for updates, with no upstream update feed, announcement service, or CloudKit synchronization.
+- About & Licenses information with original authorship, GPLv3, dependency notices, and model provenance.
+
+VoiceInk Refine is unavailable in this fork because its separately licensed, pinned model restricts use in other software. Plain local dictation and permitted optional enhancement providers remain available. See the [model notices](VoiceInk/Resources/Legal/THIRD_PARTY_NOTICES.md).
 
 ## Get Started
 
-### Download
-Get the latest version with a free trial from [tryvoiceink.com](https://tryvoiceink.com). Your purchase helps me work on VoiceInk full-time and continuously improve it with new features and updates.
+The initial build target is **Apple silicon with macOS 15 or later**. Intel is unverified. Apple Speech additionally requires macOS 26 or later; other model and provider requirements vary.
 
-#### Homebrew
-Alternatively, you can install VoiceInk via `brew`:
+Download the **[Robey Voice 0.1.0 preview](https://github.com/GrillerGeek/VoiceInkGG/releases/tag/v0.1.0)**, including the DMG, matching source archive, provenance and checksums. This Apple Development-signed build is **not notarized** and installation on another Mac remains unverified. Read the [release notes](docs/robey-voice-release-0.1.0.md) and [installation and rollback runbook](docs/robey-voice-installation.md) before installing.
 
-```shell
-brew install --cask voiceink
-```
+You can also build from this checkout using [BUILDING.md](BUILDING.md). There is no Robey Voice Homebrew cask; the upstream VoiceInk download and cask install the upstream application.
 
-### Build from Source
-As an open-source project, you can build VoiceInk yourself by following the instructions in [BUILDING.md](BUILDING.md). However, the compiled version includes additional benefits like automatic updates, priority support via Discord and email, and helps fund ongoing development.
+The [validation record](docs/robey-voice-validation.md) records the latest signed Release build and all 22 passing acceptance checks, including model-file validation and setup readiness across restart. Earlier builds completed actual Apple Speech and Whisper file transcription with history persistence. Native review of the latest model-setup corrections, owner permission onboarding, live dictation, and second-Mac checks remain pending. The local review package is in `.review-build/review-package/`; this Apple Development-signed build is not notarized.
 
-## Requirements
+## Data and Settings
 
-- macOS 15.0 or later
+Robey Voice does not automatically import, move, or delete VoiceInk data. Use Settings to export a versioned JSON backup and explicitly select import categories on the destination. New exports omit provider API keys; settings transfer does not include history, recordings, model weights, or macOS permission grants. See the [transfer procedure](docs/robey-voice-installation.md#transfer-settings).
 
 ## Documentation
 
-- [Building from Source](BUILDING.md) - Detailed instructions for building the project
-- [Contributing Guidelines](CONTRIBUTING.md) - How to contribute to VoiceInk
-- [Code of Conduct](CODE_OF_CONDUCT.md) - Our community standards
+- [Building from Source](BUILDING.md)
+- [Installation, Settings Transfer, and Rollback](docs/robey-voice-installation.md)
+- [Validation Record and Review Checklist](docs/robey-voice-validation.md)
+- [0.1.0 Preview Release Notes](docs/robey-voice-release-0.1.0.md)
+- [Third-Party Notices](THIRD_PARTY_NOTICES.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
 
-## Contributing
+## License and Acknowledgments
 
-This project is **not accepting pull requests** at this time. You're welcome to fork and modify VoiceInk for your own use.
+The application is licensed under [GNU GPLv3](LICENSE). Robey Voice modifications and original artwork are by Jason Robey, November 16, 2026. Original VoiceInk copyrights and authorship are preserved. This fork is not an upstream release or an offer of upstream support.
 
-You can still contribute by:
-- Reporting bugs via [issues](https://github.com/Beingpax/VoiceInk/issues)
-- Suggesting features or enhancements
-- Improving documentation via issues
-
-For more details, see our [Contributing Guidelines](CONTRIBUTING.md). For build instructions, see our [Building Guide](BUILDING.md).
-
-## License
-
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-If you encounter any issues or have questions, please:
-1. Check the existing issues in the GitHub repository
-2. Create a new issue if your problem isn't already reported
-3. Provide as much detail as possible about your environment and the problem
-
-## Acknowledgments
-
-### Core Technology
-- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) - High-performance inference of OpenAI's Whisper model
-- [FluidAudio](https://github.com/FluidInference/FluidAudio) - Used for Parakeet model implementation
-- [TranscribeCpp for Swift](https://github.com/Beingpax/Transcribe-cpp-swift) - SwiftPM distribution of [transcribe.cpp](https://github.com/handy-computer/transcribe.cpp), used for local GGUF transcription models
-- [SenseVoice Small](https://huggingface.co/FunAudioLLM/SenseVoiceSmall) by FunAudioLLM / Alibaba - Multilingual model available under the [FunASR Model Open Source License Agreement](https://github.com/modelscope/FunASR/blob/main/MODEL_LICENSE)
-
-### Essential Dependencies
-- [Sparkle](https://github.com/sparkle-project/Sparkle) - Keeping VoiceInk up to date
-- [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) - User-customizable keyboard shortcuts
-- [LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin) - Launch at login functionality
-- [MediaRemoteAdapter](https://github.com/ejbills/mediaremote-adapter) - Media playback control during recording
-- [Zip](https://github.com/marmelroy/Zip) - File compression and decompression utilities
-- [Swift Atomics](https://github.com/apple/swift-atomics) - Low-level atomic operations for thread-safe concurrent programming
-
-
----
-
-Made with ❤️ by Pax
+Core technology includes [whisper.cpp](https://github.com/ggml-org/whisper.cpp), [FluidAudio](https://github.com/FluidInference/FluidAudio), and [TranscribeCpp for Swift](https://github.com/Beingpax/Transcribe-cpp-swift). The original bundled Silero VAD detector is retained with its MIT license and exact provenance. Transcription and Refine weights are not bundled. Downloaded models retain their own names, licenses, and provenance. The [exact-revision inventory](VoiceInk/Resources/Legal/DEPENDENCY_INVENTORY.md) now verifies all nine resolved Swift packages and the native Whisper dependency; optional model terms remain separate from the application's GPL.

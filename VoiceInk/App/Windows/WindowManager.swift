@@ -45,8 +45,8 @@ enum AppPresentationPolicy {
 class WindowManager: NSObject {
     static let shared = WindowManager()
 
-    private static let mainWindowIdentifier = NSUserInterfaceItemIdentifier("com.prakashjoshipax.voiceink.mainWindow")
-    private static let mainWindowAutosaveName = NSWindow.FrameAutosaveName("VoiceInkMainWindowFrame")
+    private static let mainWindowIdentifier = NSUserInterfaceItemIdentifier("\(AppIdentity.logSubsystem).mainWindow")
+    private static let mainWindowAutosaveName = NSWindow.FrameAutosaveName("RobeyVoiceMainWindowFrame")
 
     private weak var mainWindow: NSWindow?
     private var didApplyInitialPlacement = false
@@ -83,7 +83,7 @@ class WindowManager: NSObject {
         window.titleVisibility = .hidden
         window.backgroundColor = .clear
         window.isReleasedWhenClosed = false
-        window.title = "VoiceInk"
+        window.title = "Robey Voice"
         window.collectionBehavior = [.fullScreenPrimary]
         window.level = .normal
         window.isOpaque = false

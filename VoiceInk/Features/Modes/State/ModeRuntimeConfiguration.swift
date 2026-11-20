@@ -175,7 +175,7 @@ enum ModeRuntimeResolver {
             provider: provider,
             modelName: modelName,
             useClipboardContext: provider == .voiceInkRefine ? false : mode?.useClipboardContext ?? false,
-            useSelectedTextContext: provider == .voiceInkRefine ? false : mode?.useSelectedTextContext ?? true,
+            useSelectedTextContext: provider == .voiceInkRefine ? false : mode?.useSelectedTextContext ?? false,
             useScreenCaptureContext: provider == .voiceInkRefine ? false : mode?.useScreenCapture ?? false
         )
     }

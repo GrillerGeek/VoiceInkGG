@@ -88,7 +88,7 @@ class BrowserURLService {
     static let shared = BrowserURLService()
 
     private let logger = Logger(
-        subsystem: "com.prakashjoshipax.voiceink",
+        subsystem: AppIdentity.logSubsystem,
         category: "browser.applescript"
     )
     private let scriptTimeout: TimeInterval = 1.5
