@@ -35,6 +35,8 @@ build/
 .local-build/
 .review-build/
 .local-dependencies/
+__pycache__/
+*.pyc
 
 # CocoaPods
 #
@@ -103,3 +105,10 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Reviewed dependency notices are source, not downloaded build dependencies.
+!VoiceInk/Resources/Legal/Dependencies/
+!VoiceInk/Resources/Legal/Dependencies/**
+
+# Transient execution-progress lock; keep the progress record itself in source.
+docs/guildhall/plans/**/progress.json.lock

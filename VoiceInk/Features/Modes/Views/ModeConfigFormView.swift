@@ -63,7 +63,15 @@ struct ModeConfigFormView: View {
 
     var body: some View {
         QuickPanelScaffold {
-            formContent
+            VStack(alignment: .leading, spacing: 12) {
+                if draft.selectedAIProvider == AIProvider.voiceInkRefine.rawValue {
+                    Text(VoiceInkRefineService.unavailableReason)
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.Status.warningStrong)
+                        .padding(.horizontal, 20)
+                }
+                formContent
+            }
         } header: {
             header
         } footer: {
@@ -219,7 +227,14 @@ struct ModeConfigFormView: View {
                             .lineLimit(1)
                     }
                     .menuStyle(.borderlessButton)
+                    .accessibilityLabel("Transcription Model")
+                    .accessibilityValue(Text(verbatim:
+                        availableModels.first { $0.selectionKey == draft.selectedTranscriptionModelName }?.displayName
+                            ?? String(localized: "Unavailable")
+                    ))
+                    .accessibilityIdentifier("transcription-model-picker")
                 }
+                .accessibilityElement(children: .contain)
                 .onChange(of: draft.selectedTranscriptionModelName) { _, newModelName in
                     if let modelName = newModelName,
                         let model = warmupSnapshot.transcriptionModel(named: modelName)

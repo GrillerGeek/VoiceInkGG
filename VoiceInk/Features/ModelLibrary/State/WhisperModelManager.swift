@@ -112,7 +112,7 @@ class WhisperModelManager: ObservableObject {
     /// TranscriptionModelManager can rebuild allAvailableModels.
     var onModelsChanged: (() -> Void)?
 
-    let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "WhisperModelManager")
+    let logger = Logger(subsystem: AppIdentity.logSubsystem, category: "WhisperModelManager")
 
     init(modelsDirectory: URL) {
         self.modelsDirectory = modelsDirectory
@@ -133,11 +133,29 @@ class WhisperModelManager: ObservableObject {
         do {
             let fileURLs = try FileManager.default.contentsOfDirectory(
                 at: modelsDirectory, includingPropertiesForKeys: nil)
+            var rejectedCount = 0
             availableModels = fileURLs.compactMap { url in
                 guard url.pathExtension == "bin" else { return nil }
-                return WhisperModelFile(name: url.deletingPathExtension().lastPathComponent, url: url)
+                do {
+                    try WhisperModelValidator.validate(at: url)
+                    return WhisperModelFile(name: url.deletingPathExtension().lastPathComponent, url: url)
+                } catch {
+                    rejectedCount += 1
+                    logError("Local model is incomplete or incompatible; excluded from ready models", error)
+                    return nil
+                }
+            }
+            onModelsChanged?()
+            if rejectedCount > 0 {
+                NotificationManager.shared.showNotification(
+                    title: String(localized: "Some local models are incomplete or incompatible. Download them again or import complete .bin files. Existing files are preserved."),
+                    type: .warning,
+                    duration: 7.0
+                )
             }
         } catch {
+            availableModels = []
+            onModelsChanged?()
             logError("Error loading available models", error)
         }
     }
@@ -151,6 +169,8 @@ class WhisperModelManager: ObservableObject {
         defer { isModelLoading = false }
 
         do {
+            // Recheck a selected file in case it changed after discovery/import.
+            try await Self.validateModel(at: model.url)
             whisperContext = try await WhisperContext.createContext(path: model.url.path)
 
             let currentPrompt =
@@ -160,6 +180,18 @@ class WhisperModelManager: ObservableObject {
             isModelLoaded = true
             loadedWhisperModel = model
         } catch {
+            whisperContext = nil
+            isModelLoaded = false
+            loadedWhisperModel = nil
+            availableModels.removeAll { $0.url == model.url }
+            onModelDeleted?(model.name)
+            onModelsChanged?()
+            logError("Model could not load; readiness cleared", error)
+            NotificationManager.shared.showNotification(
+                title: String(localized: "The local model could not load. Free memory and retry, or download or import the model again. Its file has been preserved."),
+                type: .error,
+                duration: 7.0
+            )
             throw VoiceInkEngineError.modelLoadFailed
         }
     }
@@ -280,6 +312,7 @@ class WhisperModelManager: ObservableObject {
             }
 
             try Task.checkCancellation()
+            availableModels.removeAll { $0.name == whisperModel.name }
             availableModels.append(whisperModel)
             self.downloadProgress.removeValue(forKey: model.name + "_main")
 
@@ -289,7 +322,7 @@ class WhisperModelManager: ObservableObject {
                 WhisperModelWarmupCoordinator.shared.scheduleWarmup(for: model, whisperModelManager: self)
             }
         } catch is CancellationError {
-            removePartialDownload(for: model, preserveMainModel: committedMainModel != nil)
+            removePartialDownload(for: model)
             if let committedMainModel,
                 !availableModels.contains(where: { $0.name == committedMainModel.name })
             {
@@ -298,14 +331,19 @@ class WhisperModelManager: ObservableObject {
             }
             handleModelDownloadError(model, CancellationError())
         } catch {
+            if let committedMainModel,
+                !availableModels.contains(where: { $0.name == committedMainModel.name })
+            {
+                availableModels.append(committedMainModel)
+                onModelsChanged?()
+            }
             handleModelDownloadError(model, error)
         }
     }
 
-    private func removePartialDownload(for model: WhisperModel, preserveMainModel: Bool) {
-        if !preserveMainModel {
-            try? FileManager.default.removeItem(at: modelsDirectory.appendingPathComponent(model.filename))
-        }
+    private func removePartialDownload(for model: WhisperModel) {
+        // Main downloads use task-owned staging and clean up there. Never remove
+        // a pre-existing user file merely because a replacement was cancelled.
         try? FileManager.default.removeItem(
             at: modelsDirectory.appendingPathComponent("\(model.name)-encoder.mlmodelc.zip")
         )
@@ -316,9 +354,14 @@ class WhisperModelManager: ObservableObject {
         let data = try await downloadFileWithProgress(from: url, progressKey: progressKeyMain)
         try Task.checkCancellation()
 
-        let destinationURL = modelsDirectory.appendingPathComponent(model.filename)
-        try data.write(to: destinationURL, options: .atomic)
+        let candidateURL = modelsDirectory.appendingPathComponent(".download-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: candidateURL) }
+        try data.write(to: candidateURL, options: .atomic)
+        try await Self.validateModel(at: candidateURL)
         try Task.checkCancellation()
+
+        let destinationURL = modelsDirectory.appendingPathComponent(model.filename)
+        try installValidatedCandidate(candidateURL, at: destinationURL)
 
         return WhisperModelFile(name: model.name, url: destinationURL)
     }
@@ -452,6 +495,15 @@ class WhisperModelManager: ObservableObject {
     private func handleModelDownloadError(_ model: WhisperModel, _ error: Error) {
         self.downloadProgress.removeValue(forKey: model.name + "_main")
         self.downloadProgress.removeValue(forKey: model.name + "_coreml")
+        guard !(error is CancellationError) else { return }
+        logError("Model download failed; retry remains available", error)
+        NotificationManager.shared.showNotification(
+            title: availableModels.contains(where: { $0.name == model.name })
+                ? String(localized: "The local model is ready, but optional Core ML optimization did not finish. Plain local transcription remains available.")
+                : String(localized: "The model download could not be completed. Check the connection and retry, or import a complete compatible .bin file."),
+            type: .error,
+            duration: 6.0
+        )
     }
 
     func deleteModel(_ model: WhisperModelFile) async {
@@ -515,7 +567,9 @@ class WhisperModelManager: ObservableObject {
         let baseName = sourceURL.deletingPathExtension().lastPathComponent
         let destinationURL = modelsDirectory.appendingPathComponent("\(baseName).bin")
 
-        if FileManager.default.fileExists(atPath: destinationURL.path) {
+        if FileManager.default.fileExists(atPath: destinationURL.path),
+            (try? WhisperModelValidator.validate(at: destinationURL)) != nil
+        {
             NotificationManager.shared.showNotification(
                 title: String(format: String(localized: "A model named %@.bin already exists"), baseName),
                 type: .warning,
@@ -524,11 +578,19 @@ class WhisperModelManager: ObservableObject {
             return
         }
 
+        let candidateURL = modelsDirectory.appendingPathComponent(".import-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: candidateURL) }
         do {
+            try await Self.validateModel(at: sourceURL)
             try FileManager.default.createDirectory(at: modelsDirectory, withIntermediateDirectories: true)
-            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            try FileManager.default.copyItem(at: sourceURL, to: candidateURL)
+            // Validate the owned snapshot too, before its name or success is published.
+            try await Self.validateModel(at: candidateURL)
+            try Task.checkCancellation()
+            try installValidatedCandidate(candidateURL, at: destinationURL)
 
             let newWhisperModel = WhisperModelFile(name: baseName, url: destinationURL)
+            availableModels.removeAll { $0.name == baseName }
             availableModels.append(newWhisperModel)
 
             onModelsChanged?()
@@ -549,6 +611,38 @@ class WhisperModelManager: ObservableObject {
     }
 
     // MARK: - Helpers
+
+    nonisolated private static func validateModel(at url: URL) async throws {
+        let validation = Task.detached(priority: .utility) {
+            try WhisperModelValidator.validate(at: url)
+        }
+        try await withTaskCancellationHandler {
+            try await validation.value
+        } onCancel: {
+            validation.cancel()
+        }
+    }
+
+    /// Publish only a validated task-owned snapshot. An existing file is retained
+    /// for recovery, including invalid same-name imports that formerly blocked retry.
+    private func installValidatedCandidate(_ candidate: URL, at destination: URL) throws {
+        let fileManager = FileManager.default
+        var previous: URL?
+        if fileManager.fileExists(atPath: destination.path) {
+            let recoveryDirectory = modelsDirectory.appendingPathComponent("Replaced Models", isDirectory: true)
+            try fileManager.createDirectory(at: recoveryDirectory, withIntermediateDirectories: true)
+            let recoveryURL = recoveryDirectory.appendingPathComponent(
+                destination.lastPathComponent + "." + UUID().uuidString)
+            try fileManager.moveItem(at: destination, to: recoveryURL)
+            previous = recoveryURL
+        }
+        do {
+            try fileManager.moveItem(at: candidate, to: destination)
+        } catch {
+            if let previous { try? fileManager.moveItem(at: previous, to: destination) }
+            throw error
+        }
+    }
 
     private func logError(_ message: String, _ error: Error) {
         logger.error("❌ \(message, privacy: .public): \(error, privacy: .public)")

@@ -12,6 +12,10 @@ struct TranscriptionModelDownloadCard: View {
         VStack(alignment: .leading, spacing: 14) {
             header
             modelMetadata
+            Text("Parakeet uses Core ML on macOS 15 or later. Apple silicon is the verified platform. For another local model, use Whisper from AI Models after setup. Apple Speech requires macOS 26. VoiceInk Refine is unavailable because its model license does not permit this fork.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             if let status {
                 progressPanel(status)

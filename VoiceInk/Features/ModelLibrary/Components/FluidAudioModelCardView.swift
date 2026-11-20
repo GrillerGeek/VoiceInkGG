@@ -112,11 +112,13 @@ struct FluidAudioModelCardView: View {
                     }
                 }) {
                     HStack(spacing: 4) {
-                        Text(LocalizedStringKey(isDownloading ? "Cancel" : "Download"))
+                        Text(LocalizedStringKey(isDownloading ? "Cancel"
+                            : fluidAudioModelManager.requiresSetupRetry(for: model.name)
+                                ? "Resume Download" : "Download"))
                         Image(systemName: isDownloading ? "xmark.circle" : "arrow.down.circle")
                     }
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(isDownloading ? AppTheme.Action.destructiveForeground : AppTheme.Action.primaryForeground)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(

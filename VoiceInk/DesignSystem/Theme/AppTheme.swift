@@ -92,7 +92,6 @@ enum AppTheme {
         static let dictionary = Color(nsColor: .systemBlue)
         static let transcribeAudio = Color(red: 0.86, green: 0.32, blue: 0.27)
         static let fallback = Color(nsColor: .systemGray)
-        static let license = Color(nsColor: .systemGreen)
     }
 
     enum Waveform {
@@ -109,7 +108,12 @@ enum AppTheme {
         static let secondary = Color(nsColor: .secondaryLabelColor)
         static let muted = secondary.opacity(0.70)
         static let disabled = Color(nsColor: .disabledControlTextColor)
-        static let onAccent = Color(nsColor: .alternateSelectedControlTextColor)
+        // The light teal needs white text; the dark appearance's bright mint needs ink.
+        static let onAccent = Color(nsColor: NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(srgbRed: 0.063, green: 0.165, blue: 0.208, alpha: 1)
+                : .white
+        })
     }
 
     enum NativeText {

@@ -80,7 +80,7 @@ struct ModeConfig: Codable, Identifiable, Equatable {
         urlConfigs: [URLConfig]? = nil, triggerGroups: [ModeTriggerGroup]? = nil, triggerWords: [String] = [],
         isAIEnhancementEnabled: Bool, selectedPrompt: String? = nil,
         selectedTranscriptionModelName: String? = nil, isRealtimeTranscriptionEnabled: Bool = true,
-        selectedLanguage: String? = nil, useClipboardContext: Bool = false, useSelectedTextContext: Bool = true,
+        selectedLanguage: String? = nil, useClipboardContext: Bool = false, useSelectedTextContext: Bool = false,
         useScreenCapture: Bool = false,
         isTextFormattingEnabled: Bool = false, selectedAIProvider: String? = nil, selectedAIModel: String? = nil,
         outputMode: ModeOutputMode = .paste, autoSendKey: FinishAndSendKey = .none,
@@ -153,7 +153,7 @@ struct ModeConfig: Codable, Identifiable, Equatable {
         if let decodedSelectedTextContext = try container.decodeIfPresent(Bool.self, forKey: .useSelectedTextContext) {
             useSelectedTextContext = decodedSelectedTextContext
         } else if UserDefaults.standard.object(forKey: "useSelectedTextContext") == nil {
-            useSelectedTextContext = true
+            useSelectedTextContext = false
         } else {
             useSelectedTextContext = UserDefaults.standard.bool(forKey: "useSelectedTextContext")
         }
@@ -259,7 +259,7 @@ class ModeManager: ObservableObject {
     @Published var configurations: [ModeConfig] = []
     @Published var activeConfiguration: ModeConfig?
 
-    private let triggerLogger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "mode.triggers")
+    private let triggerLogger = Logger(subsystem: AppIdentity.logSubsystem, category: "mode.triggers")
 
     private let configKey = "modeConfigurationsV2"
     private let activeConfigIdKey = "activeConfigurationId"

@@ -55,7 +55,7 @@ enum AutoLearnSettings {
 
     static func registerDefaults(defaults: UserDefaults = .standard) {
         migrateReviewerSelection(defaults: defaults)
-        defaults.register(defaults: [isEnabledKey: true, minimumCorrectionsKey: defaultMinimumCorrections,
+        defaults.register(defaults: [isEnabledKey: false, minimumCorrectionsKey: defaultMinimumCorrections,
             aiReviewModeKey: AIReviewMode.automatic.rawValue])
     }
 

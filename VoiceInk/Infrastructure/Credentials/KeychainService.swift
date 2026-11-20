@@ -2,20 +2,9 @@ import Foundation
 import Security
 import os
 
-/// Stores production credentials in the Data Protection Keychain and local-build credentials in a separate, non-syncing login Keychain namespace.
+/// Stores fork credentials in an isolated, non-syncing macOS login Keychain namespace.
 final class KeychainService {
     static let shared = KeychainService()
-
-    enum Accessibility {
-        case afterFirstUnlockThisDeviceOnly
-
-        fileprivate var value: CFString {
-            switch self {
-            case .afterFirstUnlockThisDeviceOnly:
-                return kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-            }
-        }
-    }
 
     enum ReadResult<Value> {
         case value(Value)
@@ -23,14 +12,8 @@ final class KeychainService {
         case unavailable(OSStatus)
     }
 
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "KeychainService")
-    #if LOCAL_BUILD
-        private let service = "com.prakashjoshipax.VoiceInk.Local"
-        private let defaults = UserDefaults.standard
-        private let legacyLocalPrefix = "LocalKeychain_"
-    #else
-        private let service = "com.prakashjoshipax.VoiceInk"
-    #endif
+    private let logger = Logger(subsystem: AppIdentity.logSubsystem, category: "KeychainService")
+    private let service = AppIdentity.keychainServiceName
 
     private init() {}
 
@@ -40,33 +23,27 @@ final class KeychainService {
     @discardableResult
     func save(
         _ value: String,
-        forKey key: String,
-        syncable: Bool = true,
-        accessibility: Accessibility? = nil
+        forKey key: String
     ) -> Bool {
         guard let data = value.data(using: .utf8) else {
             logger.error("Failed to convert value to data for key: \(key, privacy: .public)")
             return false
         }
-        return save(data: data, forKey: key, syncable: syncable, accessibility: accessibility)
+        return save(data: data, forKey: key)
     }
 
     /// Saves data to Keychain.
     @discardableResult
     func save(
         data: Data,
-        forKey key: String,
-        syncable: Bool = true,
-        accessibility: Accessibility? = nil
+        forKey key: String
     ) -> Bool {
-        let query = baseQuery(forKey: key, syncable: syncable)
-        var attributes: [String: Any] = [kSecValueData as String: data]
-        applyAccessibility(accessibility, to: &attributes)
+        let query = baseQuery(forKey: key)
+        let attributes: [String: Any] = [kSecValueData as String: data]
         let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
 
         if updateStatus == errSecSuccess {
             logger.info("Successfully updated keychain item for key: \(key, privacy: .public)")
-            removeLegacyLocalFallback(forKey: key)
             return true
         }
 
@@ -79,12 +56,10 @@ final class KeychainService {
 
         var addQuery = query
         addQuery[kSecValueData as String] = data
-        applyAccessibility(accessibility, to: &addQuery)
         let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
 
         if addStatus == errSecSuccess {
             logger.info("Successfully saved keychain item for key: \(key, privacy: .public)")
-            removeLegacyLocalFallback(forKey: key)
             return true
         }
 
@@ -92,7 +67,6 @@ final class KeychainService {
             let retryStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
             if retryStatus == errSecSuccess {
                 logger.info("Successfully updated concurrently created keychain item for key: \(key, privacy: .public)")
-                removeLegacyLocalFallback(forKey: key)
                 return true
             }
 
@@ -109,16 +83,16 @@ final class KeychainService {
     }
 
     /// Retrieves a string value from Keychain.
-    func getString(forKey key: String, syncable: Bool = true) -> String? {
-        guard let data = getData(forKey: key, syncable: syncable) else {
+    func getString(forKey key: String) -> String? {
+        guard let data = getData(forKey: key) else {
             return nil
         }
         return String(data: data, encoding: .utf8)
     }
 
     /// Retrieves a string while distinguishing missing data from unavailable storage.
-    func readString(forKey key: String, syncable: Bool = true) -> ReadResult<String> {
-        switch readData(forKey: key, syncable: syncable) {
+    func readString(forKey key: String) -> ReadResult<String> {
+        switch readData(forKey: key) {
         case .value(let data):
             guard let value = String(data: data, encoding: .utf8) else {
                 logger.error("Failed to decode keychain string for key: \(key, privacy: .public)")
@@ -133,16 +107,16 @@ final class KeychainService {
     }
 
     /// Retrieves data from Keychain.
-    func getData(forKey key: String, syncable: Bool = true) -> Data? {
-        guard case .value(let data) = readData(forKey: key, syncable: syncable) else {
+    func getData(forKey key: String) -> Data? {
+        guard case .value(let data) = readData(forKey: key) else {
             return nil
         }
         return data
     }
 
     /// Retrieves data while preserving the Security framework status.
-    func readData(forKey key: String, syncable: Bool = true) -> ReadResult<Data> {
-        var query = baseQuery(forKey: key, syncable: syncable)
+    func readData(forKey key: String) -> ReadResult<Data> {
+        var query = baseQuery(forKey: key)
         query[kSecReturnData as String] = kCFBooleanTrue
         query[kSecMatchLimit as String] = kSecMatchLimitOne
 
@@ -158,13 +132,6 @@ final class KeychainService {
         }
 
         if status == errSecItemNotFound {
-            #if LOCAL_BUILD
-                if let legacyData = defaults.data(forKey: legacyLocalPrefix + key) {
-                    _ = save(data: legacyData, forKey: key, syncable: false)
-                    return .value(legacyData)
-                }
-            #endif
-
             return .notFound
         }
 
@@ -176,12 +143,11 @@ final class KeychainService {
 
     /// Deletes an item from Keychain.
     @discardableResult
-    func delete(forKey key: String, syncable: Bool = true) -> Bool {
-        let query = baseQuery(forKey: key, syncable: syncable)
+    func delete(forKey key: String) -> Bool {
+        let query = baseQuery(forKey: key)
         let status = SecItemDelete(query as CFDictionary)
 
         if status == errSecSuccess || status == errSecItemNotFound {
-            removeLegacyLocalFallback(forKey: key)
             if status == errSecSuccess {
                 logger.info("Successfully deleted keychain item for key: \(key, privacy: .public)")
             }
@@ -196,8 +162,8 @@ final class KeychainService {
 
     /// Checks if a key exists in Keychain. Returns nil when the Keychain can't answer
     /// (for example while it's locked), so callers can tell that apart from a missing key.
-    func exists(forKey key: String, syncable: Bool = true) -> Bool? {
-        var query = baseQuery(forKey: key, syncable: syncable)
+    func exists(forKey key: String) -> Bool? {
+        var query = baseQuery(forKey: key)
         query[kSecReturnData as String] = kCFBooleanFalse
 
         let status = SecItemCopyMatching(query as CFDictionary, nil)
@@ -205,11 +171,7 @@ final class KeychainService {
         case errSecSuccess:
             return true
         case errSecItemNotFound:
-            #if LOCAL_BUILD
-                return defaults.data(forKey: legacyLocalPrefix + key) != nil
-            #else
-                return false
-            #endif
+            return false
         default:
             logger.error(
                 "Failed to check keychain item for key: \(key, privacy: .public), status: \(status, privacy: .public)"
@@ -221,36 +183,16 @@ final class KeychainService {
     // MARK: - Private Helpers
 
     /// Creates a base Keychain query.
-    private func baseQuery(forKey key: String, syncable: Bool) -> [String: Any] {
+    private func baseQuery(forKey key: String) -> [String: Any] {
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: key,
         ]
 
-        #if !LOCAL_BUILD
-            query[kSecUseDataProtectionKeychain as String] = true
-
-            if syncable {
-                query[kSecAttrSynchronizable as String] = kCFBooleanTrue
-            }
-        #endif
-
+        // Login Keychain items are device-local and never synchronized or shared
+        // with the upstream application, regardless of signing configuration.
+        query[kSecAttrSynchronizable as String] = kCFBooleanFalse
         return query
-    }
-
-    private func applyAccessibility(_ accessibility: Accessibility?, to attributes: inout [String: Any]) {
-        #if !LOCAL_BUILD
-            if let accessibility {
-                attributes[kSecAttrAccessible as String] = accessibility.value
-            }
-        #endif
-    }
-
-    // Removes the old local UserDefaults copy after secure storage succeeds or the credential is deleted.
-    private func removeLegacyLocalFallback(forKey key: String) {
-        #if LOCAL_BUILD
-            defaults.removeObject(forKey: legacyLocalPrefix + key)
-        #endif
     }
 }

@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "title": "Robey Voice",
+  "repo": "VoiceInkGG",
+  "branch": "Customize",
+  "host": "codex",
+  "plan_path": "docs/guildhall/plans/2026-11-16-robey-voice.md",
+  "status": "completed",
+  "note": "Local review package complete: 22 checks pass; 536 source hashes and package checksums verified. Human branding, permissions and second-Mac review remain open.",
+  "started_at": 1794836236.923518,
+  "updated_at": 1794996189.30939,
+  "milestones": [
+    {
+      "id": "plan",
+      "name": "Plan",
+      "goal": "Set scope and review architecture",
+      "state": "done",
+      "loop": null,
+      "pass": 1,
+      "started_at": 1794836313.1642199,
+      "finished_at": 1794842139.841726,
+      "added_because": null,
+      "skipped_why": null,
+      "completed": true
+    },
+    {
+      "id": "tests",
+      "name": "Tests",
+      "goal": "Establish independent acceptance checks",
+      "state": "done",
+      "loop": null,
+      "pass": 1,
+      "started_at": 1794836519.6658828,
+      "finished_at": 1794836771.297011,
+      "added_because": null,
+      "skipped_why": null,
+      "completed": true
+    },
+    {
+      "id": "build",
+      "name": "Build",
+      "goal": "Implement and package the working app",
+      "state": "done",
+      "loop": {
+        "reason": "Resolve verified build or acceptance failures autonomously",
+        "limit": 8
+      },
+      "pass": 2,
+      "started_at": 1794836771.407758,
+      "finished_at": 1794972152.1333702,
+      "added_because": null,
+      "skipped_why": null,
+      "completed": true
+    },
+    {
+      "id": "review",
+      "name": "Review",
+      "goal": "Complete independent specialist reviews",
+      "state": "done",
+      "loop": {
+        "reason": "Resolve material review findings",
+        "limit": 4
+      },
+      "pass": 1,
+      "started_at": 1794970468.8273752,
+      "finished_at": 1794983962.778628,
+      "added_because": null,
+      "skipped_why": null,
+      "completed": true
+    },
+    {
+      "id": "walkthrough",
+      "name": "Walkthrough",
+      "goal": "Verify the native app with a local model",
+      "state": "done",
+      "loop": null,
+      "pass": 1,
+      "started_at": 1794983962.945007,
+      "finished_at": 1794983963.1035562,
+      "added_because": null,
+      "skipped_why": null,
+      "completed": true
+    },
+    {
+      "id": "report",
+      "name": "Review pack",
+      "goal": "Deliver artifacts and truthful validation",
+      "state": "done",
+      "loop": null,
+      "pass": 1,
+      "started_at": 1794983963.263744,
+      "finished_at": 1794996188.935633,
+      "added_because": null,
+      "skipped_why": null,
+      "completed": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "architecture",
+      "milestone": "plan",
+      "pass": 1,
+      "name": "Architecture review",
+      "state": "done",
+      "who": "Aldric",
+      "added_because": null,
+      "started_at": 1794836313.427851,
+      "finished_at": 1794836519.556433
+    },
+    {
+      "id": "build-preparation",
+      "milestone": "plan",
+      "pass": 1,
+      "name": "Build preparation",
+      "state": "done",
+      "who": "Builder",
+      "added_because": null,
+      "started_at": 1794836313.771591,
+      "finished_at": 1794842139.372011
+    },
+    {
+      "id": "acceptance-tests",
+      "milestone": "tests",
+      "pass": 1,
+      "name": "Acceptance checks",
+      "state": "done",
+      "who": "Seraphine",
+      "added_because": null,
+      "started_at": 1794836519.997918,
+      "finished_at": 1794836771.179137
+    },
+    {
+      "id": "application",
+      "milestone": "build",
+      "pass": 1,
+      "name": "Application changes",
+      "state": "done",
+      "who": "Bruga",
+      "added_because": null,
+      "started_at": 1794836771.6459389,
+      "finished_at": 1794842139.1368508
+    },
+    {
+      "id": "branding",
+      "milestone": "build",
+      "pass": 1,
+      "name": "Brand and notices",
+      "state": "done",
+      "who": "Designer",
+      "added_because": null,
+      "started_at": 1794836771.873448,
+      "finished_at": 1794868708.1442828
+    },
+    {
+      "id": "packaging",
+      "milestone": "build",
+      "pass": 1,
+      "name": "Build and package",
+      "state": "done",
+      "who": "Builder",
+      "added_because": null,
+      "started_at": 1794842139.585672,
+      "finished_at": 1794970468.299388
+    }
+  ],
+  "waypoints": [
+    {
+      "id": "branding-review",
+      "need": "Review the completed identity and working package",
+      "after": "report",
+      "state": "upcoming",
+      "planned": true,
+      "waiting_since": null,
+      "done_at": null
+    }
+  ],
+  "loops": [
+    {
+      "milestone": "build",
+      "pass": 2,
+      "why": "Closing review found invalid Whisper files could be marked ready; independent regression and repair required",
+      "at": 1794970750.3539982,
+      "within_limit": true
+    }
+  ]
+}

@@ -80,7 +80,7 @@ private extension ViewType {
 
     static let secondaryItems: [ViewType] = [
         .settings,
-        .license,
+        .about,
     ]
 
     static func assertSidebarItemsCoverAllCases() {
@@ -100,7 +100,7 @@ private extension ViewType {
         case .audio: return "mic.fill"
         case .dictionary: return "text.book.closed.fill"
         case .settings: return "gearshape.fill"
-        case .license: return "checkmark.seal.fill"
+        case .about: return "checkmark.seal.fill"
         }
     }
 
@@ -122,8 +122,8 @@ private extension ViewType {
             return .init(background: AppTheme.Sidebar.transcribeAudio)
         case .settings:
             return .init(background: AppTheme.Sidebar.fallback)
-        case .license:
-            return .init(background: AppTheme.Sidebar.license)
+        case .about:
+            return .init(background: AppTheme.Sidebar.fallback)
         }
     }
 }
@@ -164,6 +164,7 @@ private struct SidebarItemButton: View {
         .help(viewType.title)
         .accessibilityLabel(viewType.title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityRemoveTraits(isSelected ? [] : .isSelected)
         .animation(.easeInOut(duration: 0.12), value: isSelected)
     }
 
@@ -178,7 +179,7 @@ private struct SidebarItemButton: View {
 
     private var rowBackgroundColor: Color {
         if isSelected {
-            return Color(nsColor: .selectedContentBackgroundColor)
+            return AppTheme.Action.primaryFill
         }
 
         return .clear
@@ -189,7 +190,7 @@ private struct SidebarItemButton: View {
     }
 
     private var selectedForegroundColor: Color {
-        Color(nsColor: .alternateSelectedControlTextColor)
+        AppTheme.Action.primaryForeground
     }
 }
 
