@@ -98,7 +98,62 @@ The output directory must be new and beneath `.review-build/`. Review the genera
 ROBEY_VOICE_BUILD_RECORD="$PWD/.review-build/DerivedData-review/robey-build-record.json" ./scripts/release.sh --app ".review-build/DerivedData-review/Build/Products/Release/Robey Voice.app" --output-dir ".review-build/package-custom"
 ```
 
-Only when an appropriate Developer ID Application identity and an existing Keychain notarization profile are available, build with that identity and pass `--notary-profile <profile>` to `scripts/release.sh`. The script requires a Developer ID app, submits the DMG, requires an Accepted result, and staples and validates its ticket. `scripts/setup-release-notarization.sh` only explains prerequisites; it creates no account or credentials. There is no `make release-setup` target. Current credentials are insufficient for notarization; a local package must be labeled accordingly.
+## Developer ID Distribution and Notarization
+
+A normal `make local` build is for local review. Selecting a Developer ID identity alone does not make that build notarization-ready: the verified initial build omitted secure timestamps and injected `com.apple.security.get-task-allow`. The notarized candidate was produced by rerunning Xcode with **both** `OTHER_CODE_SIGN_FLAGS=--timestamp` and `CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO`. Its four binaries/five architecture slices then had Developer ID signatures, secure timestamps and hardened runtime, with no debugging entitlement. The seven declared app entitlements were preserved. All 22 acceptance checks passed.
+
+Use your own installed Developer ID Application identity and an authenticated Keychain profile. The published release includes `SIGNING-RECIPE.txt` with the exact candidate invocation; replace its identity with yours. The following reproduces that distribution-signing route from the repository root, using separate outputs:
+
+```bash
+ROBEY_SIGNING_IDENTITY="<Developer ID Application identity SHA or name>"
+ROBEY_DERIVED="$PWD/.review-build/DeveloperIDDerivedData"
+ROBEY_APP="$ROBEY_DERIVED/Build/Products/Release/Robey Voice.app"
+ROBEY_RECORD="$ROBEY_DERIVED/robey-build-record.json"
+make local LOCAL_DERIVED_DATA="$ROBEY_DERIVED" LOCAL_CODESIGN_IDENTITY="$ROBEY_SIGNING_IDENTITY"
+xcodebuild -project "$PWD/VoiceInk.xcodeproj" -scheme VoiceInk -configuration Release \
+  -derivedDataPath "$ROBEY_DERIVED" \
+  -clonedSourcePackagesDirPath "$PWD/.local-dependencies/SourcePackages" \
+  -packageCachePath "$PWD/.local-dependencies/PackageCache" \
+  -onlyUsePackageVersionsFromResolvedFile -disableAutomaticPackageResolution \
+  -xcconfig "$PWD/LocalBuild.xcconfig" CODE_SIGN_IDENTITY="$ROBEY_SIGNING_IDENTITY" \
+  CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=YES ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
+  OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
+  -skipPackagePluginValidation -skipMacroValidation build
+./scripts/verify-app.sh "$ROBEY_APP"
+python3 scripts/validate-dependencies.py
+python3 scripts/build-provenance.py finish "$ROBEY_RECORD" "$ROBEY_APP"
+ROBEY_VOICE_APP="$ROBEY_APP" make test
+```
+
+Before submission, inspect every included Mach-O signature and architecture for the intended Developer ID, secure timestamp and hardened runtime, and verify that `get-task-allow` is absent or false. Signature verification alone does not establish those properties or Apple acceptance. The build record is refreshed only after the distribution signing and verification; any later app change needs a new binding and appropriate verification.
+
+The signed disk-image route used for this release prepares a new package without submission, explicitly signs the outer DMG, saves the submission ID, then waits for that same submission. `scripts/release.sh --notary-profile <profile>` can submit a prepared Developer ID app's DMG and staple an Accepted ticket, but it does **not** sign the outer DMG itself. The explicit route below preserves that additional signing step:
+
+```bash
+ROBEY_PACKAGE="$PWD/.review-build/notarized-package-new"
+ROBEY_DMG="$ROBEY_PACKAGE/Robey-Voice-0.1.0-arm64.dmg"
+ROBEY_VOICE_BUILD_RECORD="$ROBEY_RECORD" ./scripts/release.sh --app "$ROBEY_APP" --output-dir "$ROBEY_PACKAGE"
+codesign --force --sign "$ROBEY_SIGNING_IDENTITY" --timestamp "$ROBEY_DMG"
+xcrun notarytool submit "$ROBEY_DMG" --keychain-profile "RobeyVoice-Notarization" \
+  --output-format json > "$ROBEY_PACKAGE/notarization-upload.json"
+ROBEY_SUBMISSION_ID="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$ROBEY_PACKAGE/notarization-upload.json")"
+xcrun notarytool wait "$ROBEY_SUBMISSION_ID" --keychain-profile "RobeyVoice-Notarization" \
+  --output-format json > "$ROBEY_PACKAGE/notarization.json"
+python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["status"] == "Accepted"' "$ROBEY_PACKAGE/notarization.json"
+xcrun notarytool log "$ROBEY_SUBMISSION_ID" --keychain-profile "RobeyVoice-Notarization" "$ROBEY_PACKAGE/notarization-log.json"
+xcrun stapler staple "$ROBEY_DMG"
+xcrun stapler validate "$ROBEY_DMG"
+hdiutil verify "$ROBEY_DMG"
+spctl --assess --type open --context context:primary-signature --verbose=4 "$ROBEY_DMG"
+spctl --assess --type exec --verbose=4 "$ROBEY_APP"
+python3 scripts/build-provenance.py verify "$ROBEY_RECORD" "$ROBEY_APP"
+```
+
+Stop and inspect the saved log on rejection; if a command is interrupted, query the saved submission ID before submitting again. Stapling here changes the disk image, not the app. It does not establish offline app launch or second-Mac compatibility.
+
+Only after the Accepted result and verification, update `DISTRIBUTION-STATUS.txt` to describe the observed result and regenerate `SHA256SUMS.txt` over the actual files to be distributed, including notarization receipts and the signing recipe when supplied. Signing/stapling changes the DMG hash, so the preparation script's earlier checksum file is stale. Keep the checksum file itself out of its input list. Never place passwords, private keys or credential exports in source or release assets.
+
+The [notarized 0.1.0 release notes](docs/robey-voice-release-0.1.0-notarized.md) record the actual submission and validation checkpoint. `scripts/setup-release-notarization.sh` explains prerequisites only; it creates no account or credentials. There is no `make release-setup` target.
 
 ## Troubleshooting
 

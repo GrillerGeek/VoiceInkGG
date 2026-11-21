@@ -4,18 +4,20 @@ This runbook covers the 0.1.0 Apple silicon build with a macOS 15 deployment tar
 
 ## Identify the Package
 
-Download the assets from the **[0.1.0 preview release](https://github.com/GrillerGeek/VoiceInkGG/releases/tag/v0.1.0)** into one directory. Use `Robey-Voice-0.1.0-arm64.dmg`, `Robey-Voice-0.1.0-source.tar.gz`, `source-provenance.json`, `build-record.json`, `DISTRIBUTION-STATUS.txt`, and `SHA256SUMS.txt` from the same release. The named source archive has the package's per-file provenance; GitHub's automatically generated source ZIP/tarball is a separate repository export.
+Download the assets from the **[0.1.0 notarized preview](https://github.com/GrillerGeek/VoiceInkGG/releases/tag/v0.1.0-notarized)** into one directory. Use `Robey-Voice-0.1.0-arm64.dmg`, `Robey-Voice-0.1.0-source.tar.gz`, `source-provenance.json`, `build-record.json`, `DISTRIBUTION-STATUS.txt`, `SHA256SUMS.txt`, and the accompanying signing/notarization evidence from that same release. Download every file named in `SHA256SUMS.txt` before checking it. The named source archive has the package's per-file provenance; GitHub's automatic source ZIP/tarball is a separate repository export.
 
-Build instructions are in [BUILDING.md](../BUILDING.md). The verified local review package remains in `.review-build/review-package/`. Its checksums, DMG integrity, staged-app equality, and signatures passed; it is Apple Development signed and not notarized. See the [release notes](robey-voice-release-0.1.0.md) for scope and remaining acceptance checks.
+The notarized package is Developer ID signed. Apple accepted submission `08bf7c02-e6fc-4dca-943c-5d35b0985768`; the signed disk image's ticket was stapled and validated, disk-image integrity passed, and Gatekeeper accepted both the disk image and app as `Notarized Developer ID` on the build Mac. The app itself was not separately stapled. Offline first-launch and installation on another Mac have not been tested. See the [notarized release notes](robey-voice-release-0.1.0-notarized.md).
 
-Check the package files from the directory containing all six downloaded assets, or from the local package directory:
+Check the downloaded files from their directory:
 
 ```bash
 shasum -a 256 -c SHA256SUMS.txt
 hdiutil verify Robey-Voice-0.1.0-arm64.dmg
 ```
 
-Read the distribution status before copying the app. An Apple Development or ad-hoc signature can support a local review build; it is not notarization and can be rejected on another Mac. Ordinary independent distribution requires the separately validated Developer ID and notarization path. No Developer ID identity or usable saved notarization profile was found for the initial build. Do not disable Gatekeeper, remove quarantine as an installation recipe, or modify security databases to make a build appear accepted.
+Read `DISTRIBUTION-STATUS.txt` and retain the notarization evidence. The local notarized package is in `.review-build/notarized-release-v0.1.0/`. The [original preview](https://github.com/GrillerGeek/VoiceInkGG/releases/tag/v0.1.0) and `.review-build/review-package/` are preserved historical Apple Development-signed, non-notarized artifacts. Their old hashes and signing limits do not describe the notarized disk image.
+
+Build instructions, including the required distribution signing options, are in [BUILDING.md](../BUILDING.md). Local Apple Development or ad-hoc builds are not notarized and can be rejected on another Mac. Do not disable Gatekeeper, remove quarantine as an installation recipe, or modify security databases to make a build appear accepted.
 
 ## Install and Set Up
 

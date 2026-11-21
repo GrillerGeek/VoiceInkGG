@@ -23,11 +23,11 @@ VoiceInk Refine is unavailable in this fork because its separately licensed, pin
 
 The initial build target is **Apple silicon with macOS 15 or later**. Intel is unverified. Apple Speech additionally requires macOS 26 or later; other model and provider requirements vary.
 
-Download the **[Robey Voice 0.1.0 preview](https://github.com/GrillerGeek/VoiceInkGG/releases/tag/v0.1.0)**, including the DMG, matching source archive, provenance and checksums. This Apple Development-signed build is **not notarized** and installation on another Mac remains unverified. Read the [release notes](docs/robey-voice-release-0.1.0.md) and [installation and rollback runbook](docs/robey-voice-installation.md) before installing.
+Download the **[Robey Voice 0.1.0 notarized preview](https://github.com/GrillerGeek/VoiceInkGG/releases/tag/v0.1.0-notarized)**, including the DMG, matching source archive, provenance and checksums. It is Developer ID signed, accepted by Apple, and distributed in a signed disk image with a validated notarization ticket. Gatekeeper accepted the app and disk image on the build Mac; installation on another Mac remains unverified. Read the [notarized release notes](docs/robey-voice-release-0.1.0-notarized.md) and [installation and rollback runbook](docs/robey-voice-installation.md) before installing. The [original, non-notarized preview](https://github.com/GrillerGeek/VoiceInkGG/releases/tag/v0.1.0) remains available unchanged.
 
 You can also build from this checkout using [BUILDING.md](BUILDING.md). There is no Robey Voice Homebrew cask; the upstream VoiceInk download and cask install the upstream application.
 
-The [validation record](docs/robey-voice-validation.md) records the latest signed Release build and all 22 passing acceptance checks, including model-file validation and setup readiness across restart. Earlier builds completed actual Apple Speech and Whisper file transcription with history persistence. Native review of the latest model-setup corrections, owner permission onboarding, live dictation, and second-Mac checks remain pending. The local review package is in `.review-build/review-package/`; this Apple Development-signed build is not notarized.
+The notarized candidate passed all **22 acceptance checks** in 35.110 seconds. The [earlier validation record](docs/robey-voice-validation.md) preserves the original review checkpoint; [notarized release notes](docs/robey-voice-release-0.1.0-notarized.md) record the new signing and Apple acceptance evidence. Earlier builds completed actual Apple Speech and Whisper file transcription with history persistence. Native review of the latest model-setup corrections, owner permission onboarding, live dictation, and second-Mac checks remain pending. The notarized package is in `.review-build/notarized-release-v0.1.0/`; the original non-notarized review package remains in `.review-build/review-package/`.
 
 ## Data and Settings
 
@@ -38,7 +38,8 @@ Robey Voice does not automatically import, move, or delete VoiceInk data. Use Se
 - [Building from Source](BUILDING.md)
 - [Installation, Settings Transfer, and Rollback](docs/robey-voice-installation.md)
 - [Validation Record and Review Checklist](docs/robey-voice-validation.md)
-- [0.1.0 Preview Release Notes](docs/robey-voice-release-0.1.0.md)
+- [0.1.0 Notarized Preview Release Notes](docs/robey-voice-release-0.1.0-notarized.md)
+- [Original 0.1.0 Preview Release Notes](docs/robey-voice-release-0.1.0.md)
 - [Third-Party Notices](THIRD_PARTY_NOTICES.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
 
