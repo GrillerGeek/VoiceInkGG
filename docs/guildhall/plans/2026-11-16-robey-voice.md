@@ -305,13 +305,25 @@ Publication checklist:
 
 - [x] Recheck remote/default branch, clean main worktree, reviewed source manifest and app/package build binding.
 - [x] Rerun the real-app acceptance checks and audit the exact source staged for publication.
-- [ ] Commit and push Customize; create and merge its PR into main without bypassing branch protections.
-- [ ] Refresh matching source provenance/checksums against the merged source and publish `v0.1.0` assets.
-- [ ] Verify remote main, merged PR, tag and uploaded release assets.
+- [x] Commit and push Customize; create and merge its PR into main without bypassing branch protections.
+- [x] Refresh matching source provenance/checksums against the merged source and publish `v0.1.0` assets.
+- [x] Verify remote main, merged PR, tag and uploaded release assets.
 
 The available binary remains the exact Apple Development-signed arm64 review build. The first public release will be labeled a preview/prerelease because notarization, second-Mac acceptance and the latest repaired UI checks are still pending. No new application or dependency change is needed. Publication changes are confined to download/release documentation and excluding the transient progress lock from source control; existing review reports remain historical checkpoints.
 
 Publication preparation evidence: fresh real-app acceptance passed all 22 checks with no skips in 42.335 seconds (`.review-build/publication-acceptance.log`). All staged source blobs match their reviewed file hashes except the explicitly authorized publication docs/plan; no credential or generated-cache candidates were found. Source/code whitespace checks pass. Full staged whitespace notices are confined to five exact upstream legal/model-notice copies, whose original bytes are intentionally preserved. Origin/main is unprotected and still at the baseline; there are no existing Customize PRs or fork releases to duplicate.
+
+Publication completion checkpoint: implementation commit `4c2e4f49702483a8eb30e257bd0e292f4231145a` was merged by PR #1 into main at `388f84974cdaf64f19f58ba7329c55195fd0b696`; PR Lens passed. Original preview `v0.1.0` was published November 20 with six verified assets, whose remote SHA-256 digests matched the local files. Both worktrees and delivery refs were synchronized. The published preview and its assets remain preserved.
+
+## Notarization checkpoint — November 21, 2026
+
+Jason confirmed paid Developer Program membership, installed a usable Developer ID Application identity, and configured `RobeyVoice-Notarization` locally. No password or private key was exported or added to source. A separate Developer ID build was prepared under `.review-build/DeveloperIDDerivedData`, preserving the original preview. Normal Xcode build signing required explicit `OTHER_CODE_SIGN_FLAGS=--timestamp` and `CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO`; the exact distribution invocation is retained as generated signing evidence.
+
+The resulting app passed all 22 real-artifact checks with no skips in 35.110 seconds. All four binaries/five architecture slices have Developer ID signatures, secure timestamps and hardened runtime; source entitlements are preserved and the injected debugging entitlement is absent. Source-input digest remains `da441f50e8d7d07538eb77a1c00e3f066c5cca56b3c730e2479cfe5dd7192804`; app-tree digest is `5898ad72fe57fab0c0e7ee0bba9253ebe0def548882f0d4a5721860bd1310656`.
+
+Apple **Accepted** submission `08bf7c02-e6fc-4dca-943c-5d35b0985768`. The signed DMG was ticket-stapled; stapler validation, image integrity and strict component signatures passed. Gatekeeper accepted both the exact DMG and untouched app as **Notarized Developer ID**. Root independently queried Apple's Accepted status and repeated ticket/Gatekeeper validation. Final stapled DMG SHA-256 is `9940e59744f41fb2b8e0c24e169018c9eff41293241681a2b4a213ef2717b0ef`.
+
+The separate notarized preview targets `v0.1.0-notarized`, retaining application version 0.1.0 and the same application code. Publication documentation will point to it; historical review reports retain their checkpoint context. Final GitHub publication metadata and adjacent checksums/provenance are the canonical delivery records. This distribution change does not establish latest repaired native UI, live microphone/paste, offline copied-app, second-Mac or owner branding acceptance. Only the DMG ticket is stapled; the app remains bound byte-for-byte to its verified build record.
 
 - User is away and delegated routine choices. Continue independent work; do not add optional approval pauses.
 - Missing signing access or unavailable second-device UI acceptance must remain explicit while a working local deliverable is pursued.
